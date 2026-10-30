@@ -413,6 +413,7 @@ function CaptureForm({ units }) {
 }
 
 // COMPONENTE: Dashboard y Tabla de Reportes
+// COMPONENTE: Dashboard y Tabla de Reportes
 function Dashboard({ units }) {
   const [selectedDateFilter, setSelectedDateFilter] = useState('all');
 
@@ -439,6 +440,20 @@ function Dashboard({ units }) {
     shortage: filteredUnits.filter(u => u.estatus === 'Shortage').length,
     general: filteredUnits.filter(u => u.estatus === 'En Reparación').length,
     otro: filteredUnits.filter(u => u.estatus === 'Otro').length,
+  };
+
+  const handleDeleteUnit = async (unitId, serialNumber) => {
+    const confirmDelete = window.confirm(`¿Estás seguro de eliminar el registro de la unidad con número de serie: ${serialNumber}?`);
+    if (!confirmDelete) return;
+
+    try {
+      const unitDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'quality_units', unitId);
+      await deleteDoc(unitDocRef);
+      alert("¡Registro eliminado correctamente de la base de datos!");
+    } catch (error) {
+      console.error("Error al eliminar la unidad:", error);
+      alert("Hubo un error al intentar eliminar el registro.");
+    }
   };
 
   const exportToExcel = () => {
@@ -615,12 +630,13 @@ function Dashboard({ units }) {
                 <th className="px-4 py-3 text-center text-xs font-black text-gray-600 uppercase">Residuos</th>
                 <th className="px-4 py-3 text-center text-xs font-black text-gray-600 uppercase">Apriso</th>
                 <th className="px-4 py-3 text-left text-xs font-black text-gray-600 uppercase">Comentarios</th>
+                <th className="px-4 py-3 text-center text-xs font-black text-gray-600 uppercase">Acciones</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredUnits.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="px-6 py-12 text-center text-gray-500 font-medium">
+                  <td colSpan="10" className="px-6 py-12 text-center text-gray-500 font-medium">
                     No hay unidades registradas para este filtro.
                   </td>
                 </tr>
@@ -648,6 +664,15 @@ function Dashboard({ units }) {
                         <span className={`px-2 py-0.5 rounded font-bold ${unit.aprisoClosed === 'Sí' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{unit.aprisoClosed}</span>
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-600 max-w-xs truncate">{unit.comentarios || '-'}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
+                        <button
+                          onClick={() => handleDeleteUnit(unit.id, unit.serialNumber)}
+                          className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2.5 rounded shadow text-xs transition-all cursor-pointer"
+                          title="Eliminar este registro"
+                        >
+                          🗑️ Eliminar
+                        </button>
+                      </td>
                     </tr>
                   );
                 })
